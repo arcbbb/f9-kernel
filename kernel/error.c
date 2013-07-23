@@ -45,6 +45,16 @@ static void panic_dump_stack()
 		if (++word % 8 == 0)
 			dbg_putchar('\n');
 	}
+
+	current_sp = (uint32_t *) read_psp();
+	word = 0;
+	dbg_printf(DL_EMERG, "\n\nProcess Stack dump @ 0x%p:\n", current_sp);
+	while (word < 64) {
+		dbg_printf(DL_EMERG, "%p ", *(current_sp++));
+
+		if (++word % 8 == 0)
+			dbg_putchar('\n');
+	}
 }
 #endif	/* CONFIG_PANIC_DUMP_STACK */
 

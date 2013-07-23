@@ -13,6 +13,21 @@ static inline void wait_for_interrupt()
 	__asm__ __volatile__ ("wfi");
 }
 
+static inline uint32_t read_psp()
+{
+	uint32_t result;
+
+	__asm__ __volatile__ (
+		"mrs r0, psp\n"
+		"mov %0, r0"
+		: "=r"(result)
+		:
+		: "r0"
+	);
+
+	return result;
+}
+
 static inline uint32_t read_msp()
 {
 	uint32_t result;
