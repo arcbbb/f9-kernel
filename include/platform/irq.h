@@ -99,7 +99,9 @@ static inline int irq_number()
 	void name()				\
 	{					\
 		irq_save(&current->ctx);	\
+		__asm__ __volatile__ ("push {lr}");\
 		sub();				\
+		__asm__ __volatile__ ("pop {lr}");\
 		schedule();			\
 		irq_return(&current->ctx);	\
 	}
