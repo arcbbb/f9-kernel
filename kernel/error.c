@@ -48,6 +48,7 @@ static void panic_dump_stack()
 }
 #endif	/* CONFIG_PANIC_DUMP_STACK */
 
+extern void showfault();
 void panic_impl(char *fmt, ...)
 {
 	va_list va;
@@ -57,6 +58,9 @@ void panic_impl(char *fmt, ...)
 
 	irq_disable();
 	dbg_vprintf(DL_EMERG, fmt, va);
+
+	/* Show Status of Fault Registers */
+	showfault();
 
 #ifdef CONFIG_KDB
 	kdb_dump_error();
