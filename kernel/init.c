@@ -22,6 +22,11 @@ void busfault()
 	}
 }
 
+void usagefault()
+{
+	panic("Usage Fault:\n");
+}
+
 void nointerrupt()
 {
 	while (1) {
@@ -62,7 +67,7 @@ void (* const g_pfnVectors[])() = {
 	hard_fault_handler,		/* hard fault handler */
 	memmanage_handler,		/* MPU fault handler */
 	busfault,			/* bus fault handler */
-	nointerrupt,			/* usage fault handler */
+	usagefault,			/* usage fault handler */
 	0,				/* Reserved */
 	0,				/* Reserved */
 	0,				/* Reserved */
