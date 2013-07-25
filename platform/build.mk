@@ -20,4 +20,5 @@ platform-y = \
 	spinlock.o \
 	irq.o \
 	kprobes-arch.o \
-	hw_debug.o
+	hw_debug.o \
+	tpiu.o
