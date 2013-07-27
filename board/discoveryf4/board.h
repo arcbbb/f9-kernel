@@ -13,6 +13,8 @@
 #include <platform/stm32f4/systick.h>
 
 extern struct usart_dev console_uart;
+extern struct usart_dev gdb_serial_uart;
+
 #define BOARD_UART_DEVICE \
 	UART4_IRQn
 

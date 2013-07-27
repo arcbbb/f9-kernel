@@ -16,6 +16,7 @@ CFLAGS_CPU += $(CFLAGS_FPU-y)
 platform-y = \
 	bitops.o \
 	debug_uart.o \
+	gdb_uart.o \
 	mpu.o \
 	spinlock.o \
 	irq.o \

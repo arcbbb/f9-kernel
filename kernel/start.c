@@ -11,6 +11,7 @@
 #include INC_PLAT(rcc.h)
 
 #include <platform/debug_uart.h>
+#include <platform/gdb_uart.h>
 #include <platform/irq.h>
 #include <error.h>
 #include <types.h>
@@ -105,5 +106,6 @@ void __l4_start()
 	sys_clock_init();
 
 	/* entry point */
+	gdb_uart_init();
 	main();
 }

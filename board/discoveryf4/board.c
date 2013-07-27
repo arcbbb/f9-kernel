@@ -31,3 +31,29 @@ struct usart_dev console_uart = {
 		.speed = GPIO_OSPEEDR_50M,
 	},
 };
+
+struct usart_dev gdb_serial_uart = {
+	.u_num = 5,
+	.baud = 115200,
+	.base = UART5_BASE,
+	.rcc_apbenr = RCC_UART5_APBENR,
+	.rcc_reset = RCC_APB1RSTR_USART5RST,
+	.tx = {
+		.port = GPIOC,
+		.pin = 12,
+		.pupd = GPIO_PUPDR_NONE,
+		.type = GPIO_MODER_ALT,
+		.func = af_uart5,
+		.o_type = GPIO_OTYPER_PP,
+		.speed = GPIO_OSPEEDR_50M,
+	},
+	.rx = {
+		.port = GPIOD,
+		.pin = 2,
+		.pupd = GPIO_PUPDR_NONE,
+		.type = GPIO_MODER_ALT,
+		.func = af_uart5,
+		.o_type = GPIO_OTYPER_PP,
+		.speed = GPIO_OSPEEDR_50M,
+	},
+};
