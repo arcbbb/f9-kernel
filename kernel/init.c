@@ -14,6 +14,7 @@
 extern void __l4_start();
 extern void memmanage_handler();
 extern void debugmon_handler();
+extern void arch_kprobe_handler(uint32_t *stack);
 
 void busfault()
 {
@@ -37,6 +38,7 @@ void hard_fault_handler()
 	 * preemption, then processor escalates the exception priority to
 	 * HardFault.
 	 */
+	arch_kprobe_handler(NULL);
 	panic("Kernel panic: Hard fault. Restarting\n");
 }
 

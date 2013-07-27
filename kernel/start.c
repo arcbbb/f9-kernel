@@ -52,7 +52,7 @@ int main()
 	ktimer_event_init();
 
 #ifdef CONFIG_KPROBES
-	kprobe_init();
+	//kprobe_init();
 #endif /* CONFIG_KPROBES */
 
 #ifdef CONFIG_KDB
@@ -87,6 +87,24 @@ static void init_copy_seg(uint32_t *src, uint32_t *dst, uint32_t *dst_end)
 		*dst++ = *src++;
 }
 
+struct kprobe gdb_kp;
+void gdb_handle_exception(uint32_t *registers);
+void gdb_handler()
+{
+	kprobe_unregister(&gdb_kp);
+	gdb_handle_exception(NULL);
+}
+void gdb_start()
+{
+	gdb_uart_init();
+	kprobe_init();
+
+	gdb_kp.addr = main;
+	gdb_kp.pre_handler = gdb_handler;
+	gdb_kp.post_handler = NULL;
+	kprobe_register(&gdb_kp);
+}
+
 void __l4_start()
 {
 	/* Copy data segments */
@@ -106,6 +124,6 @@ void __l4_start()
 	sys_clock_init();
 
 	/* entry point */
-	gdb_uart_init();
+	gdb_start();
 	main();
 }
