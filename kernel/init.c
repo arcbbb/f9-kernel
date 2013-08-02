@@ -4,6 +4,7 @@
  */
 
 #include <platform/debug_uart.h>
+#include <platform/irq.h>
 
 #include <debug.h>
 #include <error.h>
@@ -27,6 +28,14 @@ void nointerrupt()
 	while (1) {
 		/* wait */ ;
 	}
+}
+
+void pendsv_handler() __NAKED;
+void pendsv_handler()
+{
+	irq_enter();
+	schedule_in_irq();
+	irq_return();
 }
 
 void hard_fault_handler()
@@ -74,7 +83,7 @@ void (* const g_pfnVectors[])() = {
 	nointerrupt,
 #endif
 	0,				/* Reserved */
-	nointerrupt,			/* PendSV handler */
+	pendsv_handler,			/* PendSV handler */
 	ktimer_handler, 		/* SysTick handler */
 
 	/* Chip Level: vendor specific */
