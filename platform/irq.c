@@ -11,7 +11,17 @@ void irq_init()
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
 	/* Set default priority */
-	NVIC_SetPriority(SysTick_IRQn, 0x1, 0);
-	NVIC_SetPriority(SVCall_IRQn, 0x1, 0);
+	NVIC_SetPriority(DebugMonitor_IRQn, 0x0, 0);
+
+	NVIC_SetPriority(MemoryManagement_IRQn, 0x1, 0);
+	NVIC_SetPriority(BusFault_IRQn, 0x1, 0);
+	NVIC_SetPriority(UsageFault_IRQn, 0x1, 0);
+
+	/* priority 0x2 for uart console */
+
+	NVIC_SetPriority(SysTick_IRQn, 0x3, 0);
+
+	NVIC_SetPriority(SVCall_IRQn, 0xF, 0);
+	NVIC_SetPriority(PendSV_IRQn, 0xF, 0);
 }
 
