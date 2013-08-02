@@ -60,6 +60,9 @@ typedef struct {
 #define FPB_COMP_REPLACE_LOWER	(uint32_t) (1 << 30)
 #define FPB_COMP_REPLACE_UPPER	(uint32_t) (2 << 30)
 
+void watchpoint_handler(uint32_t *stack);
+void watch_cycle_countdown(uint32_t cycle, int (*func)(uint32_t *));
+
 void hw_debug_init();
 int breakpoint_install(uint32_t addr);
 void breakpoint_uninstall(int id);
@@ -90,5 +93,14 @@ void breakpoint_uninstall(int id);
 	do {							\
 		*FPB_CTRL = FPB_CTRL_KEY | ~FPB_CTRL_ENABLE;	\
 	} while (0)
+
+#define DWT_COMP0_CYCLE(cycle)					\
+	/* enable CMP[0] */					\
+	(*(DWT_COMP + 0)).comp = 0xFFFFFFFF;			\
+	(*(DWT_COMP + 0)).mask = 0;				\
+	(*(DWT_COMP + 0)).func = DWT_FUNC_CYCMATCH | DWT_FUNC_CYCWATCH;\
+	/* enable CYCCNT */					\
+	*DWT_CYCCNT = 0xFFFFFFFF - cycle;			\
+	*DWT_CTRL |= DWT_CTRL_CYCCNTENA;
 
 #endif /* PLATFORM_HW_DEBUG_H_ */
