@@ -14,6 +14,18 @@
 
 void irq_init();
 
+static inline void low_irq_disable()
+{
+	__asm__ __volatile__ ("mov r0, #1");
+	__asm__ __volatile__ ("msr basepri, r0");
+}
+
+static inline void low_irq_enable()
+{
+	__asm__ __volatile__ ("mov r0, #0");
+	__asm__ __volatile__ ("msr basepri, r0");
+}
+
 static inline void irq_disable()
 {
 	__asm__ __volatile__ ("cpsid i");
