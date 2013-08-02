@@ -25,8 +25,17 @@ typedef struct {
 #define DWT_PCSR		(volatile uint32_t *) (DWT_BASE + 0x1c)		/*!< Program Counter Sample Register */
 #define DWT_COMP		(volatile dwt_comp_t *) (DWT_BASE + 0x20)	/*!< Comparator Registers */
 
+/* DWT Control Register */
+#define DWT_CTRL_CYCCNTENA	(uint32_t) (1 << 0)	/*!< Enable CYCCNT */
+#define DWT_CTRL_CPIEVTENA	(uint32_t) (17 << 0)	/*!< Enable CPI count event */
+#define DWT_CTRL_EXCEVTENA	(uint32_t) (18 << 0)	/*!< Enable Exception Overhead counter event */
+#define DWT_CTRL_SLEEPEVTENA	(uint32_t) (19 << 0)	/*!< Enable Sleep counter event */
+#define DWT_CTRL_LSUEVTENA	(uint32_t) (20 << 0)	/*!< Enable LSU counter event */
+#define DWT_CTRL_FOLDEVTENA	(uint32_t) (21 << 0)	/*!< Enable Folded-instruction counter event */
+
 /* DWT Comparator Function Register */
 #define DWT_FUNC_DISABLE	(uint32_t) (0 << 0)	/*!< Comparator disabled */
+#define DWT_FUNC_CYCWATCH	(uint32_t) (4 << 0)	/*!< Watch cycle count */
 #define DWT_FUNC_DADDR_RO	(uint32_t) (5 << 0)	/*!< Watch read-only data-access */
 #define DWT_FUNC_DADDR_WO	(uint32_t) (6 << 0)	/*!< Watch write-only data-access */
 #define DWT_FUNC_DADDR_RW	(uint32_t) (7 << 0)	/*!< Watch read-write data-access */
