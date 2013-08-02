@@ -12,17 +12,19 @@
 #if !defined(CONFIG_KPROBES)
 #error "Sampling feature depends on CONFIG_KPROBES"
 #endif
-#include <kprobes.h>
+#include <platform/cortex_m.h>
+#include <hw_debug.h>
 
 extern uint32_t end_of_MFlash;
 
-/* stack overflow */
 static int sym_hit[MAX_KSYM];
 static int sym_tophit[MAX_KSYM];
 
-static int pre_handler()
+int sampling_handler(uint32_t *stack)
 {
-	sampled_pcpush((void *)((uint32_t *) thread_current()->ctx.sp)[REG_PC]);
+	sampled_pcpush((void *)stack[REG_PC]);
+	/* reset timer */
+	watch_cycle_countdown(0xFFFF, sampling_handler);
 	return 0;
 }
 
@@ -68,7 +70,6 @@ static void sampling_stat()
 }
 
 #ifdef CONFIG_KDB
-extern void __ktimer_handler();
 void kdb_show_sampling()
 {
 	static int init = 0;
@@ -76,7 +77,6 @@ void kdb_show_sampling()
 		int magic, sym_count;
 		char *sym_strings;
 		ksym *sym_tbl;
-		static struct kprobe k;
 
 		dbg_printf(DL_KDB, "Init sampling...\n");
 		magic = *((int *) &end_of_MFlash);
@@ -88,10 +88,8 @@ void kdb_show_sampling()
 		sampling_init();
 		init++;
 
-		k.addr = __ktimer_handler;
-		k.pre_handler = pre_handler;
-		k.post_handler = NULL;
-		kprobe_register(&k);
+		/* register a hook called every 0xFFFF cycles */
+		watch_cycle_countdown(0xFFFF, sampling_handler);
 		return;
 	}
 	sampling_stat();
