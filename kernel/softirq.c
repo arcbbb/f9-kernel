@@ -53,7 +53,7 @@ retry:
 	}
 
 	/* Must ensure that no interrupt reschedule its softirq */
-	irq_disable();
+	low_irq_disable();
 
 	softirq_schedule = 0;
 	for (i = 0; i < NR_SOFTIRQ; ++i) {
@@ -61,7 +61,7 @@ retry:
 	}
 
 	set_kernel_state((softirq_schedule)? T_RUNNABLE : T_INACTIVE);
-	irq_enable();
+	low_irq_enable();
 
 	if (softirq_schedule)
 		goto retry;

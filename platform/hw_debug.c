@@ -9,9 +9,10 @@
 
 #ifdef CONFIG_KPROBES
 
-extern void arch_kprobe_handler(uint32_t *stack);
+extern void breakpoint_handler(uint32_t *stack);
 
-char fp_comp[FPB_MAX_COMP];
+static char fp_comp[FPB_MAX_COMP];
+static int (*dwt_comp_func[5])(uint32_t *stack);
 
 void hw_debug_init()
 {
@@ -68,24 +69,40 @@ void breakpoint_uninstall(int id)
 	*(FPB_COMP + id) &= ~FPB_COMP_ENABLE;
 }
 
-#define enter_frame() \
-	uint32_t *stack;                                       \
-	__asm__ __volatile__ ("mov %0, sp" : "=r" (stack) : ); \
-	__asm__ __volatile__ ("push {lr}");                    \
-	__asm__ __volatile__ ("push {r4-r11}");
+void watch_cycle_countdown(uint32_t cycle, int (*func)())
+{
+	dwt_comp_func[0] = func;
+	DWT_COMP0_CYCLE(cycle);
+}
 
-#define leave_frame() \
-	__asm__ __volatile__ ("pop {r4-r11}");                 \
-	__asm__ __volatile__ ("pop {pc}");
+void watchpoint_handler(uint32_t *stack)
+{
+	/* Examine whether COMP is matched */
+	if ((*(DWT_COMP + 0)).func & DWT_FUNC_MATCHED) {
+		dwt_comp_func[0]((void *)(stack));
+		*SCB_DFSR  =  SCB_DFSR_DWTTRAP;
+	}
+}
+
+void __debugmon_handler(uint32_t *stack)
+{
+	breakpoint_handler(stack);
+	watchpoint_handler(stack);
+}
 
 void debugmon_handler() __NAKED;
 void debugmon_handler()
 {
-	enter_frame();
-
-	arch_kprobe_handler(stack);
-
-	leave_frame();
+	__asm__ __volatile__ ("push {lr}");
+	/* select r0 - Main/Process Stack */
+	__asm__ __volatile__ ("and r0, lr, #4");
+	__asm__ __volatile__ ("cmp r0, #0");
+	__asm__ __volatile__ ("itte eq");
+	__asm__ __volatile__ ("mrseq r0, msp");
+	__asm__ __volatile__ ("addeq r0, r0, #4");
+	__asm__ __volatile__ ("mrsne r0, psp");
+	__asm__ __volatile__ ("bl __debugmon_handler");
+	__asm__ __volatile__ ("pop {pc}");
 }
 
 #endif /* CONFIG_KPROBES */

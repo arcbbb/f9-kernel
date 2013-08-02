@@ -25,8 +25,17 @@ typedef struct {
 #define DWT_PCSR		(volatile uint32_t *) (DWT_BASE + 0x1c)		/*!< Program Counter Sample Register */
 #define DWT_COMP		(volatile dwt_comp_t *) (DWT_BASE + 0x20)	/*!< Comparator Registers */
 
+/* DWT Control Register */
+#define DWT_CTRL_CYCCNTENA	(uint32_t) (1 << 0)	/*!< Enable CYCCNT */
+#define DWT_CTRL_CPIEVTENA	(uint32_t) (17 << 0)	/*!< Enable CPI count event */
+#define DWT_CTRL_EXCEVTENA	(uint32_t) (18 << 0)	/*!< Enable Exception Overhead counter event */
+#define DWT_CTRL_SLEEPEVTENA	(uint32_t) (19 << 0)	/*!< Enable Sleep counter event */
+#define DWT_CTRL_LSUEVTENA	(uint32_t) (20 << 0)	/*!< Enable LSU counter event */
+#define DWT_CTRL_FOLDEVTENA	(uint32_t) (21 << 0)	/*!< Enable Folded-instruction counter event */
+
 /* DWT Comparator Function Register */
 #define DWT_FUNC_DISABLE	(uint32_t) (0 << 0)	/*!< Comparator disabled */
+#define DWT_FUNC_CYCWATCH	(uint32_t) (4 << 0)	/*!< Watch cycle count */
 #define DWT_FUNC_DADDR_RO	(uint32_t) (5 << 0)	/*!< Watch read-only data-access */
 #define DWT_FUNC_DADDR_WO	(uint32_t) (6 << 0)	/*!< Watch write-only data-access */
 #define DWT_FUNC_DADDR_RW	(uint32_t) (7 << 0)	/*!< Watch read-write data-access */
@@ -50,6 +59,9 @@ typedef struct {
 #define FPB_COMP_ENABLE		(uint32_t) (1 << 0)
 #define FPB_COMP_REPLACE_LOWER	(uint32_t) (1 << 30)
 #define FPB_COMP_REPLACE_UPPER	(uint32_t) (2 << 30)
+
+void watchpoint_handler(uint32_t *stack);
+void watch_cycle_countdown(uint32_t cycle, int (*func)(uint32_t *));
 
 void hw_debug_init();
 int breakpoint_install(uint32_t addr);
@@ -81,5 +93,14 @@ void breakpoint_uninstall(int id);
 	do {							\
 		*FPB_CTRL = FPB_CTRL_KEY | ~FPB_CTRL_ENABLE;	\
 	} while (0)
+
+#define DWT_COMP0_CYCLE(cycle)					\
+	/* enable CMP[0] */					\
+	(*(DWT_COMP + 0)).comp = 0xFFFFFFFF;			\
+	(*(DWT_COMP + 0)).mask = 0;				\
+	(*(DWT_COMP + 0)).func = DWT_FUNC_CYCMATCH | DWT_FUNC_CYCWATCH;\
+	/* enable CYCCNT */					\
+	*DWT_CYCCNT = 0xFFFFFFFF - cycle;			\
+	*DWT_CTRL |= DWT_CTRL_CYCCNTENA;
 
 #endif /* PLATFORM_HW_DEBUG_H_ */
