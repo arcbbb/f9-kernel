@@ -5,14 +5,14 @@
 
 #include <kprobes.h>
 #include <debug.h>
+#include <platform/armv7m.h>
 
 extern void ktimer_handler();
 extern void svc_handler();
 
 
-static struct kprobe kp_kt;
 static int kt_count, kt_adv_count;
-static int kp_kt_prehandler(struct kprobe *kp, struct kp_regs *target)
+static int kp_kt_prehandler(struct kprobe *kp, uint32_t *stack, uint32_t *regs)
 {
 	kt_count++;
 	if (kt_count == 10000) {
@@ -29,6 +29,7 @@ static void kp_kt_stat()
 
 static void kp_kt_init()
 {
+	static struct kprobe kp_kt;
 	kp_kt.addr = ktimer_handler;
 	kp_kt.pre_handler = kp_kt_prehandler;
 	kp_kt.post_handler = NULL;
@@ -36,11 +37,11 @@ static void kp_kt_init()
 }
 
 #include <softirq.h>
-static struct kprobe kp_softirq;
 static uint32_t softirq_stats[NR_SOFTIRQ];
-static int kp_softirq_prehandler(struct kprobe *kp, struct kp_regs *target)
+static int kp_softirq_prehandler(struct kprobe *kp, uint32_t *stack,
+				 uint32_t *regs)
 {
-	softirq_type_t type = target->regs[0];
+	softirq_type_t type = stack[REG_R0];
 	softirq_stats[type]++;
 	return 0;
 }
@@ -61,6 +62,7 @@ static void kp_softirq_stat()
 
 static void kp_softirq_init()
 {
+	static struct kprobe kp_softirq;
 	int i;
 	for (i = 0; i < NR_SOFTIRQ; i++) {
 		softirq_stats[i] = 0;
@@ -72,9 +74,8 @@ static void kp_softirq_init()
 
 }
 
-static struct kprobe kp_svc;
 static int svc_count;
-int kp_svc_posthandler(struct kprobe *kp, struct kp_regs *target)
+int kp_svc_posthandler(struct kprobe *kp, uint32_t *stack, uint32_t *regs)
 {
 	svc_count++;
 	return 0;
@@ -87,12 +88,37 @@ static void kp_svc_stat()
 
 static void kp_svc_init()
 {
+	static struct kprobe kp_svc;
 	kp_svc.addr = svc_handler;
 	kp_svc.pre_handler = NULL;
 	kp_svc.post_handler = kp_svc_posthandler;
 	kprobe_register(&kp_svc);
 }
 
+static int globalid_count;
+static int tcb;
+static int globalid_handler(struct kprobe *kp, uint32_t *stack, uint32_t *regs)
+{
+	globalid_count++;
+	tcb = stack[REG_R0];
+	return 0;
+}
+
+static void globalid_stat()
+{
+	dbg_printf(DL_KDB, "thread_by_globalid hit = %d times\n", globalid_count);
+	dbg_printf(DL_KDB, "tcb: 0x%08x\n", tcb);
+}
+
+void thread_by_globalid();
+static void globalid_init()
+{
+	static struct kretprobe rp;
+
+	rp.kp.addr = thread_by_globalid;
+	rp.handler = globalid_handler;
+	kretprobe_register(&rp);
+}
 
 void kdb_show_kprobe_info()
 {
@@ -103,10 +129,12 @@ void kdb_show_kprobe_info()
 		kp_kt_init();
 		kp_svc_init();
 		kp_softirq_init();
+		globalid_init();
 	}
 	else {
 		kp_kt_stat();
 		kp_svc_stat();
 		kp_softirq_stat();
+		globalid_stat();
 	}
 }
