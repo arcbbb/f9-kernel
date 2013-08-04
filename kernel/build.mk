@@ -22,7 +22,8 @@ KDB-$(CONFIG_KDB) = \
 	kdb.o
 
 KPROBES-$(CONFIG_KPROBES) = \
-	kprobes.o
+	kprobes.o \
+	kprobes-test.o
 
 SYMMAP-$(CONFIG_SYMMAP) = \
 	ksym.o \

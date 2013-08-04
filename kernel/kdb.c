@@ -26,6 +26,7 @@ extern void kdb_dump_threads();
 extern void kdb_dump_mempool();
 extern void kdb_dump_as();
 extern void kdb_show_sampling();
+extern void kdb_show_kprobe_info();
 
 struct kdb_t kdb_functions[] =
 {
@@ -79,6 +80,12 @@ struct kdb_t kdb_functions[] =
 		.function = kdb_show_sampling
 	},
 #endif /* ! CONFIG_SYMMAP && CONFIG_KDB */
+	{
+		.option = '2',
+		.name = "show kprobe-test info",
+		.menuentry = "show kprobe-test info",
+		.function = kdb_show_kprobe_info
+	},
 	/* Insert KDB functions here */
 };
 
