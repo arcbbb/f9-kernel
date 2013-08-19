@@ -262,7 +262,9 @@ void as_destroy(as_t *as)
 		return;
 	}
 
-	/* free fpages */
+	/*
+	 * FIXME: What if a CLONED fpage which is MAPPED is to be deleted
+	 */
 	while (fp) {
 		if (fp->fpage.flags & FPAGE_CLONE)
 			unmap_fpage(as, fp);

@@ -235,26 +235,21 @@ tcb_t *thread_create(l4_thread_t globalid, utcb_t *utcb)
 void thread_destroy(tcb_t *thr)
 {
 	tcb_t *parent, *child, *prev_child;
-	/*
-	 * FIXME: thread should be unaware of root
-	 * what should we do with orphan thread?
-	 */
-	extern tcb_t *root;
 
-	/* move thr's children to orphanage */
+	/* move thr's children to caller */
 	child = thr->t_child;
 
 	while (child) {
-		child->t_parent = root;
+		child->t_parent = caller;
 		if (child->t_sibling == NULL)
 			break;
 		child = child->t_sibling;
 	}
-	/* connect thr's children to other orphans */
-	child->t_sibling = root->t_child;
-	root->t_child = thr->t_child;
+	/* connect thr's children to caller's children */
+	child->t_sibling = caller->t_child;
+	caller->t_child = thr->t_child;
 
-	/* remove thr from its parent */
+	/* remove thr from its parent and its siblings */
 	parent = thr->t_parent;
 
 	if (parent->t_child == thr) {
