@@ -14,6 +14,7 @@ typedef enum {
 	SYSCALL_SOFTIRQ,
 
 #ifdef CONFIG_KDB
+	SAMPLE_SOFTIRQ,		/* Sampling event */
 	KDB_SOFTIRQ,		/* KDB should have least priority */
 #endif
 

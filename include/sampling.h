@@ -9,7 +9,7 @@
 #define MAX_SAMPLING_COUNT 10240
 
 void sampling_init(void);
-void sampled_pcpush(void *addr);
+int sampled_pcpush(void *addr);
 void sampling_disable(void);
 void sampling_enable(void);
 void sampling_stats(int **hitcountp, int **symid_list);

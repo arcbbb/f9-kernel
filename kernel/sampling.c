@@ -10,6 +10,7 @@
 
 static void *sampled_pc[MAX_SAMPLING_COUNT];
 static int sampled_count;
+static int sampled_cycle;
 static int __sampling_enabled;
 
 static int ksym_hitcount[MAX_KSYM];
@@ -27,24 +28,33 @@ void sampling_disable()
 
 void sampling_init()
 {
-	int i ;
 	if (ksym_total() > MAX_KSYM) {
 		dbg_printf(DL_KDB, "ksym %d > MAX_KSYM\n", ksym_total());
 		return;
 	}
-	for (i = 0; i < MAX_SAMPLING_COUNT; i++) {
-		sampled_pc[i] = 0;
-	}
 	sampled_count = 0;
+	sampled_cycle = 0;
 }
 
-void sampled_pcpush(void *pc)
+int sampled_pcpush(void *pc)
 {
+	/* If sampling is disabled, return as if success */
 	if (__sampling_enabled == 0)
-		return;
-	if (sampled_count == MAX_SAMPLING_COUNT)
-		sampled_count = 0;
+		return 0;
+
+	if (sampled_count == MAX_SAMPLING_COUNT) {
+	       if (sampled_cycle == 0) {
+		       sampled_count = 0;
+		       sampled_cycle++;
+	       }
+	       else {
+		       __sampling_enabled = 0;
+		       return -1;
+	       }
+	}
+
 	sampled_pc[sampled_count++] = pc;
+	return 0;
 }
 
 static int cmp_addr(const void *p1, const void *p2)

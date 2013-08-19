@@ -9,6 +9,7 @@
 
 #include <ksym.h>
 #include <sampling.h>
+#include <softirq.h>
 #include <types.h>
 #include <thread.h>
 #include <debug.h>
@@ -27,33 +28,16 @@ static int sampling_handler(struct kprobe *kp, uint32_t *stack,
 	else
 		target_stack = stack + 8;
 
-	sampled_pcpush((void *) target_stack[REG_PC]);
+	if (sampled_pcpush((void *) target_stack[REG_PC]) < 0)
+		softirq_schedule(SAMPLE_SOFTIRQ);
 	return 0;
 }
 
-extern void ktimer_handler(void);
-void kdb_show_sampling(void)
+void sample_softirq_handler(void)
 {
 	int i;
 	int symid;
 	int *hitcount, *symid_list;
-	static int init = 0;
-	static struct kprobe k;
-
-	if (init == 0) {
-		dbg_printf(DL_KDB, "Init sampling...\n");
-		sampling_init();
-		sampling_enable();
-		init++;
-
-		k.addr = ktimer_handler;
-		k.pre_handler = sampling_handler;
-		k.post_handler = NULL;
-		kprobe_register(&k);
-		return;
-	}
-
-	sampling_disable();
 	sampling_stats(&hitcount, &symid_list);
 
 	for (i = 0; i < ksym_total(); i++) {
@@ -63,6 +47,25 @@ void kdb_show_sampling(void)
 		dbg_printf(DL_KDB, "%5d [ %24s ]\n", hitcount[symid], 
 				ksym_id2name(symid));
 	}
+}
 
+extern void ktimer_handler(void);
+void kdb_show_sampling(void)
+{
+	static struct kprobe k;
+	static int initialized = 0;
+
+	dbg_printf(DL_KDB, "Init sampling...\n");
+	sampling_init();
 	sampling_enable();
+	if (initialized == 0) {
+		softirq_register(SAMPLE_SOFTIRQ, sample_softirq_handler);
+
+		k.addr = ktimer_handler;
+		k.pre_handler = sampling_handler;
+		k.post_handler = NULL;
+		kprobe_register(&k);
+		initialized++;
+	}
+	return;
 }
