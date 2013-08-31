@@ -59,10 +59,12 @@ static void ktimer_enable(uint32_t delta)
 	}
 }
 
+void sampling_ktimer(void);
 void __ktimer_handler(void)
 {
 	++ktimer_now;
 
+	sampling_ktimer();
 	if (ktimer_enabled && ktimer_delta > 0) {
 		++ktimer_time;
 		--ktimer_delta;

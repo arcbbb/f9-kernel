@@ -16,19 +16,18 @@
 #include <kprobes.h>
 #include <platform/cortex_m.h>
 
-static int sampling_handler(struct kprobe *kp, uint32_t *stack,
-		uint32_t *kp_regs)
+void sampling_ktimer(void)
 {
 	uint32_t *target_stack;
+	uint32_t *stack = (uint32_t *)__builtin_frame_address(0)+6;
+	uint32_t lr = *stack;
 
-	/* examine KTIMER LR */
-	if (stack[REG_LR] & 0x4)
+	if (lr & 0x4)
 		target_stack = PSP();
 	else
-		target_stack = stack + 8;
-
+		target_stack = stack+1;
 	sampled_pcpush((void *) target_stack[REG_PC]);
-	return 0;
+	return;
 }
 
 extern void ktimer_handler(void);
@@ -38,18 +37,12 @@ void kdb_show_sampling(void)
 	int symid;
 	int *hitcount, *symid_list;
 	static int init = 0;
-	static struct kprobe k;
 
 	if (init == 0) {
 		dbg_printf(DL_KDB, "Init sampling...\n");
 		sampling_init();
 		sampling_enable();
 		init++;
-
-		k.addr = ktimer_handler;
-		k.pre_handler = sampling_handler;
-		k.post_handler = NULL;
-		kprobe_register(&k);
 		return;
 	}
 
