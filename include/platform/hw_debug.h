@@ -6,6 +6,8 @@
 #ifndef PLATFORM_HW_DEBUG_H_
 #define PLATFORM_HW_DEBUG_H_
 
+#include <platform/irq.h>
+
 typedef struct {
 	uint32_t comp;
 	uint32_t mask;
@@ -57,10 +59,13 @@ void breakpoint_uninstall(int id);
 
 #define cpu_enable_single_step()				\
 	do {							\
+		set_irq_mask(1);				\
 		*DCB_DEMCR |= DCB_DEMCR_MON_STEP;		\
 	} while (0)
+
 #define cpu_disable_single_step()				\
 	do {							\
+		set_irq_mask(0);				\
 		*DCB_DEMCR &= ~DCB_DEMCR_MON_STEP;		\
 	} while (0)
 

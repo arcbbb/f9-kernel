@@ -14,6 +14,13 @@
 
 void irq_init(void);
 
+static inline void set_irq_mask(unsigned int mask)
+{
+	__asm__ __volatile__ (
+		"msr basepri, %0\n"
+		: : "r" (mask) : );
+}
+
 static inline void irq_disable(void)
 {
 	__asm__ __volatile__ ("cpsid i");
