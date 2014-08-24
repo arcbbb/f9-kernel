@@ -65,6 +65,7 @@ static void sys_thread_control(uint32_t *param1, uint32_t *param2)
 		tcb_t *thr = thread_by_globalid(dest);
 		thread_free_space(thr);
 		thread_destroy(thr);
+		sched_slot_dispatch(SSI_NORMAL_THREAD, 0);
 	}
 }
 
